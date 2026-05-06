@@ -9,7 +9,7 @@ export default function TCSOTerminal() {
   const [error, setError] = useState(false);
 
   // 这里的 IP 换成你刚才测试通过的那个服务器 IP
-  const API_URL = "http://107.174.253.71:8080/oracle_data.json";
+  const API_URL = "https://api.cleanstems.com/oracle_data.json";
 
   useEffect(() => {
     const fetchData = async () => {
