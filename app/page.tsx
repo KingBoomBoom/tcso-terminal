@@ -20,6 +20,8 @@ const FeedAd = () => {
 
 export default function TCSOTerminal() {
   const [data, setData] = useState<any[]>([]);
+  // 🚀 修复点：补回了丢失的 quantData 声明
+  const [quantData, setQuantData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [countdown, setCountdown] = useState(60);
   const [prices, setPrices] = useState({ BTC: "...", ETH: "...", SOL: "..." });
@@ -38,6 +40,7 @@ export default function TCSOTerminal() {
         fetchedData = [...fetchedData, ...fetchedData];
       }
       setData(fetchedData);
+      if (!Array.isArray(json)) setQuantData(json.quant_lab || null);
       setCountdown(60);
     } catch (e) {} finally { setLoading(false); }
   };
@@ -75,7 +78,6 @@ export default function TCSOTerminal() {
 
   const handleVote = (type: 'bull' | 'bear') => {
     setVoteStatus(type);
-    // 随机微调一下假数据，显得真实
     const newBull = type === 'bull' ? 78 + Math.floor(Math.random() * 5) : 78 - Math.floor(Math.random() * 5);
     setFakeStats({ bull: newBull, bear: 100 - newBull });
   };
@@ -95,7 +97,6 @@ export default function TCSOTerminal() {
   return (
     <div className="bg-[#0B0E14] min-h-screen text-zinc-300 font-sans pb-20">
       
-      {/* 跑马灯报价 - 字体适度放大 */}
       <div className="bg-blue-600 text-white text-xs uppercase tracking-widest font-bold py-2 overflow-hidden whitespace-nowrap flex items-center border-b border-blue-800 font-mono">
         <span className="bg-blue-800 px-4 py-1 mr-2 z-10 flex items-center gap-2"><Zap size={14}/> TCI TICKER</span>
         <div className="animate-[marquee_20s_linear_infinite] flex gap-10">
@@ -128,7 +129,6 @@ export default function TCSOTerminal() {
           
           <div className="col-span-12 lg:col-span-8 flex flex-col gap-8">
             
-            {/* 🚀 最新动向与游戏化投票区合体 */}
             <div className="bg-zinc-900/30 border border-blue-900/50 relative overflow-hidden group">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500"></div>
               
@@ -140,12 +140,10 @@ export default function TCSOTerminal() {
               </div>
 
               <div className="p-6 md:p-8">
-                {/* 字体显著放大的原话展示 */}
                 <blockquote className="text-lg md:text-xl text-zinc-100 font-medium leading-relaxed border-l-4 border-blue-500/50 pl-5 mb-8">
                   "{latest.raw_text || "等待数据引擎抓取最新情报..."}"
                 </blockquote>
                 
-                {/* 🚀 [留存杀器] 预测市场游戏化组件 */}
                 <div className="bg-[#0B0E14] border border-zinc-800 p-6 rounded-md mb-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Users size={16} className="text-purple-400"/>
@@ -209,7 +207,6 @@ export default function TCSOTerminal() {
                       </span>
                       <span className="text-xs text-zinc-500">{item.timestamp}</span>
                     </div>
-                    {/* 字体放大，阅读更舒适 */}
                     <p className="text-sm md:text-base text-zinc-200 leading-relaxed mb-4 border-l-2 border-zinc-600 pl-4">
                       "{item.raw_text}"
                     </p>
@@ -219,7 +216,6 @@ export default function TCSOTerminal() {
               ))}
             </div>
 
-            {/* 🚀 [SEO 结构化金矿] 更易读的文章排版 */}
             <article className="mt-8 bg-[#0B0E14] border border-zinc-800 p-6 md:p-8 rounded-sm">
               <h2 className="text-lg text-zinc-100 font-bold mb-6 tracking-wide border-b border-zinc-800 pb-4">
                 深度研报：通过 TCSO 捕捉特朗普交易周期 (Trump Trade)
@@ -258,7 +254,6 @@ export default function TCSOTerminal() {
                 </div>
               </div>
 
-              {/* 🚀 吸顶侧边广告：用户必须看 */}
               <div className="hidden lg:flex w-full bg-[#0B0E14] border border-zinc-800/80 p-2 relative flex-col items-center justify-center min-h-[300px] shadow-lg rounded-sm">
                  <span className="absolute top-2 left-2 text-[9px] text-zinc-600 tracking-widest uppercase">Advertisement</span>
                  <ins className="adsbygoogle w-full h-full relative z-10" style={{ display: 'block' }} data-ad-format="auto" data-full-width-responsive="true" data-ad-client="ca-pub-YOUR_ID" data-ad-slot="YOUR_SLOT"></ins>
