@@ -6,6 +6,7 @@ import { Activity, ExternalLink, Shield, TrendingUp, Microscope, Terminal } from
 
 export default function TCSOTerminal() {
   const [data, setData] = useState<any[]>([]);
+  const [quantData, setQuantData] = useState<any>(null); // 新增：专门存放量化周报的数据状态
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -18,7 +19,14 @@ export default function TCSOTerminal() {
         const res = await fetch(API_URL);
         if (!res.ok) throw new Error("Network error");
         const json = await res.json();
-        setData(Array.isArray(json) ? json : []);
+        
+        // 兼容性处理：判断是旧版(数组)还是新版(对象)
+        if (Array.isArray(json)) {
+          setData(json); // 旧版：直接存入推文数组
+        } else {
+          setData(json.live_feed || []); // 新版：提取实时流
+          setQuantData(json.quant_lab || null); // 新版：提取周报数据
+        }
       } catch (e) {
         console.error("数据抓取失败", e);
         setError(true);
@@ -90,7 +98,6 @@ export default function TCSOTerminal() {
                   <XAxis dataKey="timestamp" hide />
                   <YAxis domain={[0, 100]} stroke="#333" fontSize={10} />
                   <Tooltip contentStyle={{backgroundColor: '#000', border: '1px solid #333', fontSize: '12px'}} />
-                  {/* 加入一条 50 的基准参考线 */}
                   <Line type="step" dataKey={() => 50} stroke="#333" strokeDasharray="5 5" strokeWidth={1} dot={false} activeDot={false} />
                   <Line type="monotone" dataKey="analysis.tci_score" stroke="#3b82f6" strokeWidth={3} dot={false} />
                 </LineChart>
@@ -166,7 +173,7 @@ export default function TCSOTerminal() {
             </a>
           </div>
 
-          {/* 情绪量化实验室 (新增) */}
+          {/* 情绪量化实验室 (动态渲染版) */}
           <div className="bg-gray-900 border border-gray-800 p-5 rounded-sm relative overflow-hidden">
             <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/5 blur-3xl"></div>
             <h3 className="text-[10px] uppercase text-gray-400 mb-4 flex items-center gap-2 font-bold tracking-widest">
@@ -174,23 +181,21 @@ export default function TCSOTerminal() {
             </h3>
             
             <div className="mb-3 border-b border-gray-800 pb-2 flex justify-between items-baseline">
-              <span className="text-xs text-purple-400 font-bold">W19 期 AI 回测周报</span>
-              <span className="text-[9px] text-gray-500">2026-05-07</span>
+              <span className="text-xs text-purple-400 font-bold">{quantData?.week_label || "AI 回测周报"}</span>
+              <span className="text-[9px] text-gray-500">{quantData?.date || "待同步"}</span>
             </div>
             
             <div className="text-[11px] text-gray-400 leading-relaxed font-mono space-y-2">
               <p>
                 <Terminal size={10} className="inline mr-1 text-gray-500"/>
-                本周 AI 引擎共监控 <span className="text-gray-200">50</span> 条高权重推文，其中 <span className="text-gray-200">10</span> 条涉及加密货币或宏观流动性。
-              </p>
-              <p>
-                全局情绪均值为 <span className="text-green-400 font-bold">80（强烈看好）</span>。通过近半年回测数据比对发现，该情绪阈值触发后，与 BTC 在 4 小时级别上的放量拉升相关度高达 <span className="text-blue-400 font-bold">85%</span>。
+                {quantData?.content || "正在等待 AI 引擎生成最新回测数据..."}
               </p>
             </div>
 
+            {/* 这里替换成了 TG 的真实引流逻辑，记得把 t.me 后面的链接换成你自己的 */}
             <a
-              href="#"
-              onClick={(e) => e.preventDefault()}
+              href="https://t.me/你的用户名或群组"
+              target="_blank"
               className="mt-5 block w-full bg-gray-950 hover:bg-gray-800 text-gray-400 text-center py-2.5 text-[10px] font-bold border border-gray-800 transition-colors"
             >
               订阅内部 Telegram 获取实时异动推送 ↗
@@ -198,6 +203,9 @@ export default function TCSOTerminal() {
           </div>
 
         </div>
+        
+        {/* Vercel 统计组件 */}
+        <Analytics />
       </div>
     </div>
   );
