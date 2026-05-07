@@ -1,14 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // 启用代理转发逻辑
   async rewrites() {
     return [
       {
-        // 告诉 Vercel：只要网页请求 /api/oracle
+        // 匹配前端发起的 /api/oracle 请求
         source: '/api/oracle',
-        // Vercel 就去后台悄悄访问这个真实的 HTTPS 地址
-        destination: 'https://api.cleanstems.com/oracle_data.json',
+        // 转发至部署在 Racknerd 的 Python 后端
+        destination: 'http://107.174.253.71:8080',
       },
-    ]
+    ];
   },
 };
 
