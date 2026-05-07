@@ -10,8 +10,13 @@ const firaCode = Fira_Code({ subsets: ["latin"], variable: "--font-fira-code" })
 export const metadata: Metadata = {
   title: "TCSO Terminal | AI 驱动的情绪量化预言机",
   description: "基于 DeepSeek-V3 的加密货币情绪实时监控与量化回测终端",
-  icons: {
-    icon: '/icon.svg',
+ icons: {
+    icon: [
+      {
+        url: "/icon.svg",
+        type: "image/svg+xml",
+      },
+    ],
   },
   openGraph: {
     title: "TCSO 量化终端 | AI Sentiment Oracle",
