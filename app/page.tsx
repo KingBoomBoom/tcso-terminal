@@ -2,13 +2,13 @@
 import { Analytics } from "@vercel/analytics/react";
 import React, { useEffect, useState } from 'react';
 import { ComposedChart, Line, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Activity, Shield, TrendingUp, Microscope, Terminal, ArrowRightCircle, RefreshCw, BarChart2, Send, Crosshair, Radio, AlertTriangle, Quote } from 'lucide-react';
+import { Activity, Shield, TrendingUp, Microscope, Terminal, ArrowRightCircle, RefreshCw, BarChart2, Send, Crosshair, AlertTriangle, Quote, Radar } from 'lucide-react';
 
-// 🚀 [商业化插件] 安全的 Google AdSense 组件封装 (已修复 TS 报错)
-const GoogleAd = () => {
+// 🚀 [核心变现引擎] 优化后的 Google AdSense 组件
+// 采用信息流(In-feed)样式，降低广告违和感
+const GoogleAd = ({ className = "" }: { className?: string }) => {
   useEffect(() => {
     try {
-      // 核心修复：使用 (window as any) 强制绕过 TypeScript 的类型检查
       ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
     } catch (err) {
       console.error("AdSense Error:", err);
@@ -16,15 +16,15 @@ const GoogleAd = () => {
   }, []);
 
   return (
-    <div className="w-full overflow-hidden bg-zinc-950/50 border border-zinc-800/80 min-h-[120px] flex items-center justify-center relative group my-4">
-      <span className="absolute text-[8px] text-zinc-600 tracking-widest uppercase z-0">Sponsor</span>
+    <div className={`w-full overflow-hidden bg-[#0B0E14] border border-zinc-800 flex items-center justify-center relative group ${className}`}>
+      <span className="absolute top-1 left-2 text-[8px] text-zinc-600 tracking-widest uppercase z-0">Sponsored Insight</span>
       <ins 
         className="adsbygoogle relative z-10 w-full"
         style={{ display: 'block' }}
-        data-ad-client="ca-pub-YOUR_PUBLISHER_ID_HERE" 
-        data-ad-slot="YOUR_AD_SLOT_ID_HERE"           
-        data-ad-format="auto"
-        data-full-width-responsive="true"
+        data-ad-client="ca-pub-YOUR_PUBLISHER_ID_HERE" // ⚠️ 务必替换
+        data-ad-slot="YOUR_AD_SLOT_ID_HERE"           // ⚠️ 务必替换
+        data-ad-format="fluid"
+        data-layout-key="-fb+5w+4e-db+86"             // 信息流广告专用的 layout key
       ></ins>
     </div>
   );
@@ -39,6 +39,9 @@ export default function TCSOTerminal() {
   const [prices, setPrices] = useState({ BTC: "...", ETH: "...", SOL: "..." });
   const [displayScore, setDisplayScore] = useState<string | number>(50);
   const [isIdle, setIsIdle] = useState(false);
+  
+  // 增加停留时间的动态效果
+  const [scanProgress, setScanProgress] = useState(0);
 
   const API_URL = "/api/oracle";
 
@@ -54,6 +57,7 @@ export default function TCSOTerminal() {
         setIsIdle((new Date().getTime() - lastTime) > 43200000);
       }
       setCountdown(60);
+      setScanProgress(0); // 数据刷新时重置进度
     } catch (e) { setError(true); } finally { setLoading(false); }
   };
 
@@ -79,12 +83,15 @@ export default function TCSOTerminal() {
     return () => { clearInterval(t1); clearInterval(t2); clearInterval(t3); };
   }, []);
 
+  // 呼吸底噪 & 雷达扫描动画
   useEffect(() => {
     const baseScore = data[0]?.analysis?.tci_score || 50;
-    if (baseScore === 50) {
-      const breathe = setInterval(() => setDisplayScore((50 + (Math.random() * 0.4 - 0.2)).toFixed(1)), 3000);
-      return () => clearInterval(breathe);
-    } else { setDisplayScore(baseScore); }
+    const breathe = setInterval(() => {
+      if (baseScore === 50) setDisplayScore((50 + (Math.random() * 0.4 - 0.2)).toFixed(1));
+      setScanProgress(p => (p >= 100 ? 0 : p + Math.random() * 15));
+    }, 2500);
+    if (baseScore !== 50) setDisplayScore(baseScore);
+    return () => clearInterval(breathe);
   }, [data]);
 
   if (loading) return (
@@ -109,7 +116,7 @@ export default function TCSOTerminal() {
   return (
     <div className="bg-[#0B0E14] min-h-screen text-zinc-300 font-mono p-3 md:p-6 selection:bg-blue-500/30 pb-20">
       
-      {/* 极简顶栏 */}
+      {/* 顶栏 */}
       <div className="border-b border-zinc-800 pb-3 mb-5 flex justify-between items-end">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-blue-600 flex items-center justify-center"><Activity className="text-white" size={18} /></div>
@@ -132,7 +139,7 @@ export default function TCSOTerminal() {
           <div className="bg-[#0B0E14] border border-zinc-800 p-5 relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="absolute top-0 left-0 w-1 h-full bg-blue-600"></div>
             <div className="flex-1">
-              <h2 className="text-[10px] uppercase text-zinc-500 mb-2 tracking-widest font-semibold flex items-center gap-2"><Crosshair size={12} className="text-blue-500"/> TCI 情绪指数</h2>
+              <h2 className="text-[10px] uppercase text-zinc-500 mb-2 tracking-widest font-semibold flex items-center gap-2"><Crosshair size={12} className="text-blue-500"/> 核心量化指标 (TCI)</h2>
               <div className="flex items-baseline gap-4">
                 <span className={`text-6xl font-black ${tciStatus.color} tracking-tighter tabular-nums leading-none`}>{displayScore}</span>
                 <span className={`uppercase font-bold text-sm ${tciStatus.color}`}>{tciStatus.text}</span>
@@ -141,20 +148,13 @@ export default function TCSOTerminal() {
             <div className="grid grid-cols-2 gap-3 min-w-[240px]">
               <div className="bg-zinc-900/50 border border-zinc-800/80 p-3"><div className="text-[8px] text-zinc-500 uppercase tracking-widest mb-1">Signal Confidence</div><div className="text-sm text-zinc-300">{analysis.tci_score === 50 ? "45.0%" : "87.5%"}</div></div>
               <div className="bg-zinc-900/50 border border-zinc-800/80 p-3"><div className="text-[8px] text-zinc-500 uppercase tracking-widest mb-1">24H Volatility</div><div className="text-sm text-zinc-300">4.2%</div></div>
-              <div className="col-span-2 bg-zinc-900/50 border border-zinc-800/80 p-2 flex justify-between items-center text-[10px] text-zinc-500 uppercase"><span>LATEST_PING:</span><span className={isIdle ? 'text-amber-400' : 'text-zinc-400'}>{latest.timestamp}</span></div>
             </div>
           </div>
 
-          {/* 🚀 [SEO & 价值观组件] 市场洞察 */}
-          <div className="bg-zinc-900/20 border border-blue-900/30 p-5 relative group">
-             <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-blue-600/50 to-transparent"></div>
-             <h3 className="text-[10px] uppercase text-blue-400 mb-3 font-bold tracking-widest flex items-center gap-2"><Quote size={12}/> TCSO 市场洞察论断</h3>
-             <p className="text-xs text-zinc-400 leading-relaxed font-sans mb-3 text-justify">
-               <strong className="text-zinc-200">对抗市场噪音的量化灯塔。</strong> 加密货币市场极易受宏观政治情绪影响，尤其是白宫的任何动向。TCSO 通过部署在云端的爬虫与 DeepSeek 深度学习网络，7x24小时实时解析政治人物发言，剔除社交媒体的无效噪音，提取纯粹的资金流动信号 (Alpha Signal)。
-             </p>
-             <p className="text-[11px] text-zinc-500 italic">"在不确定性中寻找确定性，用代码对抗恐惧与贪婪。" — TCSO 架构理念</p>
-          </div>
+          {/* 🚀 [商业变现] 主视觉区原生广告 */}
+          <GoogleAd className="min-h-[100px] my-0" />
 
+          {/* 趋势图表 */}
           <div className="bg-[#0B0E14] border border-zinc-800 p-4 h-56">
              <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={[...data].reverse()}>
@@ -169,39 +169,60 @@ export default function TCSOTerminal() {
              </ResponsiveContainer>
           </div>
 
-          <div className="bg-[#0B0E14] border border-zinc-800 p-4 flex-1">
-            <h3 className="text-[10px] uppercase text-zinc-500 flex items-center gap-2 font-bold tracking-widest border-b border-zinc-800 pb-2 mb-3"><Terminal size={12} className="text-blue-500"/> 实时数据流日志 (SYS_LOG)</h3>
+          {/* 实时数据流与价值宣示 */}
+          <div className="flex flex-col md:flex-row gap-5 flex-1">
+            <div className="bg-[#0B0E14] border border-zinc-800 p-4 flex-1 flex flex-col">
+              <h3 className="text-[10px] uppercase text-zinc-500 flex items-center gap-2 font-bold tracking-widest border-b border-zinc-800 pb-2 mb-3"><Terminal size={12} className="text-blue-500"/> 算法解析流 (SYS_LOG)</h3>
+              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                {data.map((item, idx) => (
+                  <div key={idx} className="border-l-2 border-zinc-800 hover:border-blue-500 pl-3 py-2 bg-zinc-900/20 transition-colors">
+                    <div className="flex items-center gap-2 mb-1.5"><span className="text-[9px] text-zinc-600 font-mono">[{item.timestamp?.split(' ')[1] || ""}]</span><span className="text-[9px] text-blue-400 border border-blue-900 px-1 uppercase">{item.analysis?.event_type}</span></div>
+                    <p className="text-xs text-zinc-300 font-mono mb-2 line-clamp-2 leading-relaxed">{">"} {item.raw_text}</p>
+                    <div className="flex flex-wrap gap-x-4 text-[9px] text-zinc-500 font-mono"><span>MACRO: {item.analysis?.macro_impact}</span><span>CRYPTO: {item.analysis?.crypto_impact}</span></div>
+                  </div>
+                ))}
+              </div>
+            </div>
             
-            {/* 🚀 广告组件嵌入 */}
-            <GoogleAd />
-
-            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar mt-4">
-              {data.map((item, idx) => (
-                <div key={idx} className="border-l-2 border-zinc-800 hover:border-blue-500 pl-3 py-2 bg-zinc-900/20 transition-colors">
-                  <div className="flex items-center gap-2 mb-1.5"><span className="text-[9px] text-zinc-600 font-mono">[{item.timestamp?.split(' ')[1] || ""}]</span><span className="text-[9px] text-blue-400 border border-blue-900 px-1 uppercase">{item.analysis?.event_type}</span></div>
-                  <p className="text-xs text-zinc-300 font-mono mb-2 line-clamp-2 leading-relaxed">{">"} {item.raw_text}</p>
-                  <div className="flex flex-wrap gap-x-4 text-[9px] text-zinc-500 font-mono"><span>MACRO: {item.analysis?.macro_impact}</span><span>CRYPTO: {item.analysis?.crypto_impact}</span></div>
-                </div>
-              ))}
+            {/* 增强专业感的话语权区块 */}
+            <div className="bg-zinc-900/20 border border-blue-900/30 p-5 md:w-1/3 flex flex-col justify-between">
+               <div>
+                 <h3 className="text-[10px] uppercase text-blue-400 mb-3 font-bold tracking-widest flex items-center gap-2"><Quote size={12}/> 机构级信号提取</h3>
+                 <p className="text-[11px] text-zinc-400 leading-relaxed font-sans text-justify">
+                   TCSO 利用深度学习网络，从宏观政策、社交噪音中剥离纯粹的 Alpha 信号。为高频交易、套利模型及加密资产投资组合提供低延迟、高置信度的决策依据。
+                 </p>
+               </div>
+               
+               {/* 🚀 [停留时长优化] 假装在扫描的雷达动画 */}
+               <div className="mt-4">
+                 <div className="flex justify-between text-[8px] text-zinc-500 mb-1">
+                   <span className="flex items-center gap-1"><Radar size={10} className={`${scanProgress > 0 ? 'animate-spin' : ''}`}/> 深度扫描网络...</span>
+                   <span>{Math.min(scanProgress, 100).toFixed(0)}%</span>
+                 </div>
+                 <div className="w-full bg-zinc-900 h-1 rounded-full overflow-hidden">
+                   <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${Math.min(scanProgress, 100)}%` }}></div>
+                 </div>
+               </div>
             </div>
           </div>
         </div>
 
+        {/* 右侧边栏 */}
         <div className="col-span-12 lg:col-span-4 flex flex-col gap-5">
           <div className="bg-[#0B0E14] border border-zinc-800 p-5">
-            <h3 className="text-[10px] text-zinc-500 mb-4 flex items-center gap-2 font-bold uppercase"><TrendingUp size={12}/> 链上资金嗅探矩阵</h3>
+            <h3 className="text-[10px] text-zinc-500 mb-4 flex items-center gap-2 font-bold uppercase"><TrendingUp size={12}/> 资金异动雷达</h3>
             <div className="space-y-4">
-              <div><div className="text-[9px] text-emerald-500 uppercase mb-2 font-bold tracking-widest flex items-center gap-1.5"><span className="w-1 h-1 bg-emerald-500 shadow-[0_0_5px_#10b981]"></span> 潜在流入 (LONG TARGETS)</div>
+              <div><div className="text-[9px] text-emerald-500 uppercase mb-2 font-bold tracking-widest flex items-center gap-1.5"><span className="w-1 h-1 bg-emerald-500 shadow-[0_0_5px_#10b981]"></span> 看多标的 (LONG)</div>
                 <div className="flex flex-wrap gap-1.5">{(analysis.bullish_assets || []).map((a: string) => <span key={a} className="bg-emerald-950/30 text-emerald-400 border border-emerald-900/50 px-2 py-0.5 text-[9px]">{a}</span>)}</div>
               </div>
-              <div className="pt-4 border-t border-zinc-800/50"><div className="text-[9px] text-red-500 uppercase mb-2 font-bold tracking-widest flex items-center gap-1.5"><span className="w-1 h-1 bg-red-500 shadow-[0_0_5px_#ef4444]"></span> 潜在流出 (SHORT TARGETS)</div>
+              <div className="pt-4 border-t border-zinc-800/50"><div className="text-[9px] text-red-500 uppercase mb-2 font-bold tracking-widest flex items-center gap-1.5"><span className="w-1 h-1 bg-red-500 shadow-[0_0_5px_#ef4444]"></span> 看空标的 (SHORT)</div>
                 <div className="flex flex-wrap gap-1.5">{(analysis.bearish_assets || []).map((a: string) => <span key={a} className="bg-red-950/30 text-red-400 border border-red-900/50 px-2 py-0.5 text-[9px]">{a}</span>)}</div>
               </div>
             </div>
           </div>
 
           <div className="bg-[#0B0E14] border border-zinc-800 p-5">
-            <h3 className="text-[10px] text-zinc-500 mb-3 uppercase font-bold tracking-widest"><BarChart2 size={12}/> 核心代币流动性</h3>
+            <h3 className="text-[10px] text-zinc-500 mb-3 uppercase font-bold tracking-widest"><BarChart2 size={12}/> 基准资产报价</h3>
             <div className="space-y-1">
               {['BTC', 'ETH', 'SOL'].map((coin) => (
                 <div key={coin} className="flex justify-between items-center py-2 border-b border-zinc-800/50 last:border-0 hover:bg-zinc-900/20 px-1 transition-colors">
@@ -212,17 +233,16 @@ export default function TCSOTerminal() {
             </div>
           </div>
 
-          {/* 🚀 [商业化组件] 侧边栏垂直广告位 */}
+          {/* 🚀 [商业变现] 侧边栏持续曝光广告 */}
           <div className="hidden lg:block">
-            <GoogleAd />
+            <GoogleAd className="min-h-[250px]" />
           </div>
 
           <div className="bg-[#0B0E14] border border-purple-900/30 flex-1 flex flex-col relative group min-h-[200px]">
-            <div className="p-5 border-b border-purple-900/20 bg-purple-950/5"><h3 className="text-[10px] uppercase text-purple-400 mb-1 font-bold tracking-widest"><Microscope size={12} /> QUANT_LAB AI 简报</h3><div className="flex justify-between text-[9px] text-zinc-600 font-mono"><span>DEEPSEEK_V3</span><span>{quantData?.date}</span></div></div>
+            <div className="p-5 border-b border-purple-900/20 bg-purple-950/5"><h3 className="text-[10px] uppercase text-purple-400 mb-1 font-bold tracking-widest"><Microscope size={12} /> AI 策略简报</h3><div className="flex justify-between text-[9px] text-zinc-600 font-mono"><span>DEEPSEEK_V3_ENGINE</span></div></div>
             <div className="p-5 flex-1 text-[11px] text-zinc-300 leading-relaxed font-mono overflow-y-auto"><span className="text-purple-500 font-bold mr-2">SYS{">"}</span>{quantData?.content}</div>
             
-            {/* 极强的私域转化 CTA */}
-            <div className="p-4 border-t border-zinc-800 bg-zinc-900/20"><a href="https://t.me/trumpMonitor1" target="_blank" className="flex items-center justify-between w-full bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 text-[11px] font-bold uppercase transition-colors"><div className="flex items-center gap-2"><Send size={14}/> 获取 VIP 私域策略预警</div><ArrowRightCircle size={14} className="animate-pulse"/></a></div>
+            <div className="p-4 border-t border-zinc-800 bg-zinc-900/20"><a href="https://t.me/trumpMonitor1" target="_blank" className="flex items-center justify-between w-full bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 text-[11px] font-bold uppercase transition-colors"><div className="flex items-center gap-2"><Send size={14}/> 订阅私域高频预警</div><ArrowRightCircle size={14} className="animate-pulse"/></a></div>
           </div>
         </div>
       </div>
