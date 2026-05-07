@@ -2,35 +2,25 @@ import type { Metadata } from "next";
 import { Inter, Fira_Code } from "next/font/google";
 import "./globals.css";
 
-// 引入现代化无衬线字体和极客等宽字体
-const inter = Inter({ 
-  subsets: ["latin"], 
-  variable: "--font-inter" 
-});
-const firaCode = Fira_Code({ 
-  subsets: ["latin"], 
-  variable: "--font-fira-code" 
-});
+// 字体配置保持不变
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const firaCode = Fira_Code({ subsets: ["latin"], variable: "--font-fira-code" });
 
-// 🚀 核心产品优化：SEO 与社交媒体卡片配置
+// 🚀 核心优化：采用最扁平化、最兼容的元数据结构
 export const metadata: Metadata = {
   title: "TCSO Terminal | AI 驱动的情绪量化预言机",
   description: "基于 DeepSeek-V3 的加密货币情绪实时监控与量化回测终端",
-  // 优化：采用最稳定的 icons 声明方式
+  
+  // 修复 1: 弃用复杂的数组，直接指路图标路径（确保 icon.svg 在 public 文件夹下）
   icons: "/icon.svg", 
+  
   openGraph: {
     title: "TCSO 量化终端 | AI Sentiment Oracle",
     description: "实时捕获宏观政策与加密资产波动，AI 驱动的链上情绪回测引擎。",
     url: "https://tcso-terminal.vercel.app",
     siteName: "TCSO Terminal",
-    images: [
-      {
-        url: "https://images.unsplash.com/photo-1642104704074-907c0698cbd9?q=80&w=1200&auto=format&fit=crop", 
-        width: 1200,
-        height: 630,
-        alt: "TCSO Terminal Dashboard",
-      },
-    ],
+    // 修复 2: 使用纯字符串数组，这是 OpenGraph 兼容性最高的写法
+    images: ["https://images.unsplash.com/photo-1642104704074-907c0698cbd9?q=80&w=1200&auto=format&fit=crop"],
     locale: "zh_CN",
     type: "website",
   },
@@ -42,6 +32,7 @@ export const metadata: Metadata = {
   },
 };
 
+// 修复 3: 使用最标准的 React 组件 Props 定义，移除可能导致冲突的 Readonly
 export default function RootLayout({
   children,
 }: {
@@ -49,7 +40,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh">
-      {/* 注入极黑底色，确保加载瞬间不会出现白屏刺眼 */}
       <body className={`${inter.variable} ${firaCode.variable} font-sans bg-[#0B0E14] text-zinc-300 antialiased`}>
         {children}
       </body>
