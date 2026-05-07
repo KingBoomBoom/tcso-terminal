@@ -2,13 +2,14 @@
 import { Analytics } from "@vercel/analytics/react";
 import React, { useEffect, useState } from 'react';
 import { ComposedChart, Line, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Activity, Shield, TrendingUp, Microscope, Terminal, ArrowRightCircle, RefreshCw, BarChart2, Send, Crosshair, Radio, AlertTriangle, BookOpen, Quote } from 'lucide-react';
+import { Activity, Shield, TrendingUp, Microscope, Terminal, ArrowRightCircle, RefreshCw, BarChart2, Send, Crosshair, Radio, AlertTriangle, Quote } from 'lucide-react';
 
-// 🚀 [商业化插件] 安全的 Google AdSense 组件封装
+// 🚀 [商业化插件] 安全的 Google AdSense 组件封装 (已修复 TS 报错)
 const GoogleAd = () => {
   useEffect(() => {
     try {
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      // 核心修复：使用 (window as any) 强制绕过 TypeScript 的类型检查
+      ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
     } catch (err) {
       console.error("AdSense Error:", err);
     }
@@ -20,8 +21,8 @@ const GoogleAd = () => {
       <ins 
         className="adsbygoogle relative z-10 w-full"
         style={{ display: 'block' }}
-        data-ad-client="ca-pub-YOUR_PUBLISHER_ID_HERE" // 替换为你的 ID
-        data-ad-slot="YOUR_AD_SLOT_ID_HERE"           // 替换为你的广告位 ID
+        data-ad-client="ca-pub-YOUR_PUBLISHER_ID_HERE" 
+        data-ad-slot="YOUR_AD_SLOT_ID_HERE"           
         data-ad-format="auto"
         data-full-width-responsive="true"
       ></ins>
@@ -144,7 +145,7 @@ export default function TCSOTerminal() {
             </div>
           </div>
 
-          {/* 🚀 [SEO & 价值观组件] 市场洞察 (Market Insights) */}
+          {/* 🚀 [SEO & 价值观组件] 市场洞察 */}
           <div className="bg-zinc-900/20 border border-blue-900/30 p-5 relative group">
              <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-blue-600/50 to-transparent"></div>
              <h3 className="text-[10px] uppercase text-blue-400 mb-3 font-bold tracking-widest flex items-center gap-2"><Quote size={12}/> TCSO 市场洞察论断</h3>
@@ -171,7 +172,7 @@ export default function TCSOTerminal() {
           <div className="bg-[#0B0E14] border border-zinc-800 p-4 flex-1">
             <h3 className="text-[10px] uppercase text-zinc-500 flex items-center gap-2 font-bold tracking-widest border-b border-zinc-800 pb-2 mb-3"><Terminal size={12} className="text-blue-500"/> 实时数据流日志 (SYS_LOG)</h3>
             
-            {/* 🚀 [商业化组件] 将广告自然融入信息流 */}
+            {/* 🚀 广告组件嵌入 */}
             <GoogleAd />
 
             <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar mt-4">
