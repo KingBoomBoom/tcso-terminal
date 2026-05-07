@@ -2,7 +2,37 @@
 import { Analytics } from "@vercel/analytics/react";
 import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Activity, Shield, TrendingUp, Microscope, Terminal, ArrowRightCircle, RefreshCw, BarChart2, Send } from 'lucide-react';
+import { Activity, Shield, TrendingUp, Microscope, Terminal, ArrowRightCircle, RefreshCw, BarChart2, Send, AlertTriangle } from 'lucide-react';
+
+// 🚀 新增：安全的 Google AdSense 组件封装
+const GoogleAd = () => {
+  useEffect(() => {
+    try {
+      // 告诉 Google 脚本在这里推入广告
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (err) {
+      console.error("AdSense Error:", err);
+    }
+  }, []);
+
+  return (
+    <div className="w-full overflow-hidden rounded-sm bg-[#0B0E14] border border-zinc-800/50 min-h-[100px] flex items-center justify-center relative group">
+      {/* 广告未加载或被屏蔽时的底部提示语 */}
+      <span className="absolute text-[9px] text-zinc-700 tracking-widest uppercase">Advertisement</span>
+      
+      <ins 
+        className="adsbygoogle relative z-10 w-full"
+        style={{ display: 'block' }}
+        // 👇 ⚠️ 必须在这里填入你申请下来的 AdSense Publisher ID (例如: ca-pub-1234567890)
+        data-ad-client="ca-pub-YOUR_PUBLISHER_ID_HERE"
+        // 👇 ⚠️ 必须在这里填入你在 AdSense 后台创建的广告单元 ID
+        data-ad-slot="YOUR_AD_SLOT_ID_HERE"
+        data-ad-format="auto"
+        data-full-width-responsive="true"
+      ></ins>
+    </div>
+  );
+};
 
 export default function TCSOTerminal() {
   const [data, setData] = useState<any[]>([]);
@@ -12,6 +42,8 @@ export default function TCSOTerminal() {
   const [countdown, setCountdown] = useState(60);
   
   const [prices, setPrices] = useState({ BTC: "...", ETH: "...", SOL: "..." });
+  const [displayScore, setDisplayScore] = useState<string | number>(50);
+  const [isIdle, setIsIdle] = useState(false);
 
   const API_URL = "/api/oracle";
 
@@ -21,12 +53,16 @@ export default function TCSOTerminal() {
       if (!res.ok) throw new Error("Network error");
       const json = await res.json();
       
-      if (Array.isArray(json)) {
-        setData(json); 
-      } else {
-        setData(json.live_feed || []); 
-        setQuantData(json.quant_lab || null); 
+      let fetchedData = Array.isArray(json) ? json : (json.live_feed || []);
+      setData(fetchedData);
+      if (!Array.isArray(json)) setQuantData(json.quant_lab || null);
+      
+      if (fetchedData.length > 0 && fetchedData[0].timestamp) {
+        const lastTime = new Date(fetchedData[0].timestamp).getTime();
+        const now = new Date().getTime();
+        setIsIdle((now - lastTime) > 43200000);
       }
+
       setCountdown(60); 
     } catch (e) {
       console.error("数据抓取失败", e);
@@ -69,6 +105,19 @@ export default function TCSOTerminal() {
     };
   }, []);
 
+  useEffect(() => {
+    const baseScore = data[0]?.analysis?.tci_score || 50;
+    if (baseScore === 50) {
+      const breatheTimer = setInterval(() => {
+        const noise = (Math.random() * 0.4 - 0.2).toFixed(1);
+        setDisplayScore((50 + parseFloat(noise)).toFixed(1));
+      }, 3000);
+      return () => clearInterval(breatheTimer);
+    } else {
+      setDisplayScore(baseScore);
+    }
+  }, [data]);
+
   if (loading) return (
     <div className="bg-[#0B0E14] text-blue-500 h-screen flex flex-col items-center justify-center font-mono text-sm tracking-widest">
       <Terminal size={40} className="mb-6 animate-pulse" />
@@ -91,18 +140,17 @@ export default function TCSOTerminal() {
 
   const latest = data[0] || {};
   const analysis = latest.analysis || { tci_score: 50, bullish_assets: [], bearish_assets: [] };
-  const score = analysis.tci_score;
-
+  
   const getTciStatus = (currentScore: number) => {
     if (currentScore < 45) return { text: "空头警报 / BEARISH", color: "text-red-500" };
     if (currentScore <= 55) return { text: "情绪观望 / NEUTRAL", color: "text-amber-400" };
     return { text: "多头狂热 / BULLISH", color: "text-emerald-400" };
   };
 
-  const tciStatus = getTciStatus(score);
+  const tciStatus = getTciStatus(analysis.tci_score);
 
   return (
-    <div className="bg-[#0B0E14] min-h-screen text-zinc-300 font-mono p-4 md:p-8 selection:bg-blue-500/30">
+    <div className="bg-[#0B0E14] min-h-screen text-zinc-300 font-mono p-4 md:p-8 selection:bg-blue-500/30 pb-20">
       
       {/* 顶部状态栏 */}
       <div className="border-b border-zinc-800/80 pb-4 mb-6 flex justify-between items-end">
@@ -118,9 +166,15 @@ export default function TCSOTerminal() {
             <RefreshCw size={10} className={countdown < 5 ? "animate-spin text-blue-400" : ""} /> 
             SYNC_IN: {countdown}s
           </div>
-          <div className="text-emerald-400 flex items-center gap-1.5 text-xs font-bold bg-emerald-400/10 px-2.5 py-0.5 rounded border border-emerald-400/20 shadow-[0_0_10px_rgba(52,211,153,0.1)]">
-             <Shield size={10}/> LIVE
-          </div>
+          {isIdle ? (
+             <div className="text-amber-500 flex items-center gap-1.5 text-[10px] md:text-xs font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30 animate-pulse">
+               <AlertTriangle size={10}/> IDLE
+             </div>
+          ) : (
+             <div className="text-emerald-400 flex items-center gap-1.5 text-[10px] md:text-xs font-bold bg-emerald-400/10 px-2.5 py-0.5 rounded border border-emerald-400/20 shadow-[0_0_10px_rgba(52,211,153,0.1)]">
+               <Shield size={10}/> LIVE
+             </div>
+          )}
         </div>
       </div>
 
@@ -128,20 +182,25 @@ export default function TCSOTerminal() {
         <div className="col-span-12 lg:col-span-8 space-y-6">
           
           {/* TCI 核心面板 */}
-          <div className="bg-zinc-900/40 border border-zinc-800/80 p-6 md:p-8 rounded-sm relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1 h-full bg-blue-600/30"></div>
-            <h2 className="text-xs uppercase text-zinc-500 mb-6 tracking-widest font-semibold">TCI 指数 / Trump Crypto Sentiment</h2>
+          <div className="bg-zinc-900/40 border border-zinc-800/80 p-6 md:p-8 rounded-sm relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-1 h-full bg-blue-600/30 group-hover:bg-blue-500 transition-colors"></div>
+            <h2 className="text-xs uppercase text-zinc-500 mb-6 tracking-widest font-semibold flex items-center justify-between">
+              <span>TCI 指数 / Trump Crypto Sentiment</span>
+              <span className="text-[9px] text-zinc-600 border border-zinc-800 px-2 py-1 rounded-sm hover:text-blue-400 transition-colors cursor-pointer">
+                &lt;/&gt; API ACCESS
+              </span>
+            </h2>
             <div className="flex items-center gap-6 md:gap-8">
-              <span className={`text-7xl md:text-8xl font-black ${tciStatus.color} tracking-tighter`}>
-                {score}
+              <span className={`text-7xl md:text-8xl font-black ${tciStatus.color} tracking-tighter tabular-nums transition-all duration-300`}>
+                {displayScore}
               </span>
               <div className="flex flex-col gap-2.5">
                 <span className={`uppercase font-bold text-base md:text-xl ${tciStatus.color} tracking-wider`}>
                    {tciStatus.text}
                 </span>
-                <span className="text-[10px] text-zinc-500 font-medium bg-zinc-950 px-2.5 py-1.5 inline-block w-max border border-zinc-800/50 rounded-sm">
-                  LATEST_PING: {latest.timestamp || 'WAITING'}
-                </span>
+                <div className={`text-[10px] font-medium px-2.5 py-1.5 inline-block w-max border rounded-sm ${isIdle ? 'bg-amber-950/50 text-amber-400 border-amber-800/50' : 'bg-zinc-950 text-zinc-500 border-zinc-800/50'}`}>
+                  {isIdle ? `⚠️ MARKET_IDLE: 总统超12小时未发声` : `LATEST_PING: ${latest.timestamp || 'WAITING'}`}
+                </div>
               </div>
             </div>
           </div>
@@ -251,9 +310,11 @@ export default function TCSOTerminal() {
                 </div>
               ))}
             </div>
-            <div className="mt-3 text-[9px] text-zinc-600/70 text-right italic uppercase tracking-wider">
-              Data sourced from Binance API
-            </div>
+          </div>
+
+          {/* 🎯 真实 Google AdSense 广告位 */}
+          <div className="mb-6">
+             <GoogleAd />
           </div>
 
           {/* 量化实验室 & TG 强力转化按钮 */}
@@ -276,7 +337,6 @@ export default function TCSOTerminal() {
               </p>
             </div>
 
-            {/* 终极 UX 优化：注入了 trumpMonitor1 的高亮 Telegram 转化按钮 */}
             <a
               href="https://t.me/trumpMonitor1"
               target="_blank"
@@ -291,9 +351,8 @@ export default function TCSOTerminal() {
           </div>
 
         </div>
-        
-        <Analytics />
       </div>
+      <Analytics />
     </div>
   );
 }
