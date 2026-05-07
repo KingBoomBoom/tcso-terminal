@@ -1,8 +1,10 @@
 "use client";
 import { Analytics } from "@vercel/analytics/react";
 import React, { useEffect, useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Area, AreaChart } from 'recharts';
-import { Activity, Shield, TrendingUp, Microscope, Terminal, ArrowRightCircle, RefreshCw, BarChart2, Send, Zap, Crosshair, Radio } from 'lucide-react';
+// 👇 修复 1: 引入复合图表 ComposedChart 才能同时画线和面积图
+import { ComposedChart, Line, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+// 👇 修复 2: 补齐缺失的 AlertTriangle 图标
+import { Activity, Shield, TrendingUp, Microscope, Terminal, ArrowRightCircle, RefreshCw, BarChart2, Send, Crosshair, Radio, AlertTriangle } from 'lucide-react';
 
 export default function TCSOTerminal() {
   const [data, setData] = useState<any[]>([]);
@@ -111,14 +113,12 @@ export default function TCSOTerminal() {
   const analysis = latest.analysis || { tci_score: 50, bullish_assets: [], bearish_assets: [] };
   
   const getTciStatus = (currentScore: number) => {
-    if (currentScore < 45) return { text: "空头主导 / BEARISH", color: "text-red-500", glow: "shadow-red-500/20" };
-    if (currentScore <= 55) return { text: "流动性观望 / NEUTRAL", color: "text-amber-400", glow: "shadow-amber-500/20" };
-    return { text: "多头共识 / BULLISH", color: "text-emerald-400", glow: "shadow-emerald-500/20" };
+    if (currentScore < 45) return { text: "空头主导 / BEARISH", color: "text-red-500" };
+    if (currentScore <= 55) return { text: "流动性观望 / NEUTRAL", color: "text-amber-400" };
+    return { text: "多头共识 / BULLISH", color: "text-emerald-400" };
   };
 
   const tciStatus = getTciStatus(analysis.tci_score);
-  
-  // 生成一个基于TCI的衍生波动率
   const volatility = analysis.tci_score === 50 ? "4.2%" : (Math.abs(analysis.tci_score - 50) * 0.8).toFixed(1) + "%";
 
   return (
@@ -183,7 +183,7 @@ export default function TCSOTerminal() {
               </div>
             </div>
 
-            {/* 衍生指标矩阵 (提升专业感的关键) */}
+            {/* 衍生指标矩阵 */}
             <div className="grid grid-cols-2 gap-3 w-full md:w-auto md:min-w-[240px]">
               <div className="bg-zinc-900/50 border border-zinc-800/80 p-3">
                 <div className="text-[8px] text-zinc-500 uppercase tracking-widest mb-1">信号置信度 / Confidence</div>
@@ -207,14 +207,14 @@ export default function TCSOTerminal() {
             </div>
           </div>
 
-          {/* 波动折线图 (更换为更高级的带透明度面积图 AreaChart) */}
+          {/* 波动图表 (使用修复后的 ComposedChart) */}
           <div className="bg-[#0B0E14] border border-zinc-800 p-4 h-56">
              <div className="flex justify-between items-center mb-4">
                <h3 className="text-[10px] uppercase text-zinc-500 tracking-widest font-semibold">24H 趋势跟踪 / Trend Tracking</h3>
                <span className="text-[8px] text-blue-500 border border-blue-500/30 bg-blue-500/10 px-1 py-0.5">ALGO_SMOOTHED</span>
              </div>
              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={[...data].reverse()} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
+                <ComposedChart data={[...data].reverse()} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorTci" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
@@ -230,7 +230,7 @@ export default function TCSOTerminal() {
                   />
                   <Line type="step" dataKey={() => 50} stroke="#3f3f46" strokeDasharray="2 2" strokeWidth={1} dot={false} activeDot={false} />
                   <Area type="monotone" dataKey="analysis.tci_score" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorTci)" activeDot={{r: 3, fill: '#60a5fa'}} />
-                </AreaChart>
+                </ComposedChart>
              </ResponsiveContainer>
           </div>
 
