@@ -2,8 +2,9 @@
 import { Analytics } from "@vercel/analytics/react";
 import React, { useEffect, useState } from 'react';
 import { ComposedChart, Line, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Activity, Shield, TrendingUp, Microscope, Terminal, ArrowRightCircle, RefreshCw, BarChart2, Send, Crosshair, AlertTriangle, Zap, MessageSquare, Flame, Cpu, Mail } from 'lucide-react';
+import { Activity, Shield, TrendingUp, Microscope, Terminal, ArrowRightCircle, RefreshCw, BarChart2, Send, Crosshair, AlertTriangle, Zap, MessageSquare, Flame, Cpu, Mail, ThumbsUp, ThumbsDown, Users, Trophy } from 'lucide-react';
 
+// 🚀 [变现单元] 原生信息流广告
 const FeedAd = () => {
   useEffect(() => { try { ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({}); } catch (err) {} }, []);
   return (
@@ -21,16 +22,21 @@ export default function TCSOTerminal() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [countdown, setCountdown] = useState(60);
-  const [prices, setPrices] = useState({ BTC: "...", ETH: "...", SOL: "..." });
+  const [prices, setPrices] = useState({ BTC: "...", ETH: "...", SOL: "...", ONDO: "...", PEPE: "..." });
   const [displayScore, setDisplayScore] = useState<string | number>(50);
   const [fgiScore, setFgiScore] = useState<number>(42);
   
-  // 🚀 [新游戏化核心] 爆仓清算流
+  // 🚀 [爆仓清算流]
   const [liquidations, setLiquidations] = useState<string[]>([]);
   
-  // 🚀 [资源获取] 邮箱收集状态
+  // 🚀 [资源获取]
   const [email, setEmail] = useState("");
   const [isSubscribed, setIsSubscribed] = useState(false);
+
+  // 🚀 [Web3 终极留存杀器：空投积分与预测市场]
+  const [points, setPoints] = useState(0);
+  const [voteStatus, setVoteStatus] = useState<'unvoted' | 'bull' | 'bear'>('unvoted');
+  const [fakeStats, setFakeStats] = useState({ bull: 72, bear: 28 });
 
   const fetchOracleData = async () => {
     try {
@@ -46,33 +52,36 @@ export default function TCSOTerminal() {
 
   const fetchPrices = async () => {
     try {
-      const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbols=["BTCUSDT","ETHUSDT","SOLUSDT"]');
+      // 获取更多币种报价让跑马灯更丰富
+      const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbols=["BTCUSDT","ETHUSDT","SOLUSDT","ONDOUSDT","PEPEUSDT"]');
       const d = await res.json();
       if (d && Array.isArray(d)) {
         setPrices({
           BTC: parseFloat(d.find((i: any) => i.symbol === 'BTCUSDT')?.price || 0).toLocaleString('en-US', {minimumFractionDigits: 1}),
           ETH: parseFloat(d.find((i: any) => i.symbol === 'ETHUSDT')?.price || 0).toLocaleString('en-US', {minimumFractionDigits: 2}),
           SOL: parseFloat(d.find((i: any) => i.symbol === 'SOLUSDT')?.price || 0).toLocaleString('en-US', {minimumFractionDigits: 2}),
+          ONDO: parseFloat(d.find((i: any) => i.symbol === 'ONDOUSDT')?.price || 0).toLocaleString('en-US', {minimumFractionDigits: 4}),
+          PEPE: parseFloat(d.find((i: any) => i.symbol === 'PEPEUSDT')?.price || 0).toLocaleString('en-US', {minimumFractionDigits: 8}),
         });
       }
     } catch (e) {}
   };
 
-  // 模拟全网爆仓监控 (金融感最强的游戏化组件)
+  // 模拟全网爆仓监控
   useEffect(() => {
-    const assets = ["BTC", "ETH", "SOL", "PEPE", "WIF"];
+    const assets = ["BTC", "ETH", "SOL", "PEPE", "WIF", "DOGE"];
     const sides = ["SHORT", "LONG"];
     const generateLiq = () => {
-      const amt = (Math.random() * 3 + 0.1).toFixed(2);
+      const amt = (Math.random() * 5 + 0.5).toFixed(2);
       const asset = assets[Math.floor(Math.random() * assets.length)];
       const side = sides[Math.floor(Math.random() * sides.length)];
       const color = side === "SHORT" ? "text-emerald-400" : "text-red-400";
-      return `<span class="text-zinc-400">REKT:</span> <span class="${color} font-bold">${side}</span> ${amt}M <span class="text-blue-400">${asset}</span> Liquidated`;
+      return `<span class="text-zinc-500">REKT:</span> <span class="${color} font-bold">${side}</span> ${amt}M <span class="text-blue-400">${asset}</span> Liquidated`;
     };
 
     const interval = setInterval(() => {
       setLiquidations(prev => [generateLiq(), ...prev].slice(0, 5));
-    }, 3500); 
+    }, 3200); 
     return () => clearInterval(interval);
   }, []);
 
@@ -81,6 +90,11 @@ export default function TCSOTerminal() {
     const t1 = setInterval(fetchOracleData, 60000);
     const t2 = setInterval(fetchPrices, 10000);
     const t3 = setInterval(() => setCountdown(p => p > 0 ? p - 1 : 0), 1000);
+    
+    // 检查本地存储是否有积分，制造真实感
+    const savedPoints = localStorage.getItem('tcso_points');
+    if(savedPoints) setPoints(parseInt(savedPoints));
+
     return () => { clearInterval(t1); clearInterval(t2); clearInterval(t3); };
   }, []);
 
@@ -96,6 +110,17 @@ export default function TCSOTerminal() {
   const handleSubscribe = (e: any) => {
     e.preventDefault();
     if(email) setIsSubscribed(true);
+  };
+
+  const handleVote = (type: 'bull' | 'bear') => {
+    setVoteStatus(type);
+    const newBull = type === 'bull' ? 72 + Math.floor(Math.random() * 5) : 72 - Math.floor(Math.random() * 5);
+    setFakeStats({ bull: newBull, bear: 100 - newBull });
+    
+    // 奖励积分机制
+    const newPoints = points + 50;
+    setPoints(newPoints);
+    localStorage.setItem('tcso_points', newPoints.toString());
   };
 
   if (loading) return (
@@ -114,17 +139,18 @@ export default function TCSOTerminal() {
   return (
     <div className="bg-[#0B0E14] min-h-screen text-zinc-300 font-sans pb-20">
       
-      {/* 跑马灯报价 */}
-      <div className="bg-blue-600 text-white text-xs uppercase tracking-widest font-bold py-2 overflow-hidden whitespace-nowrap flex items-center border-b border-blue-800 font-mono">
-        <span className="bg-blue-800 px-4 py-1 mr-2 z-10 flex items-center gap-2"><Zap size={14}/> LIVE TICKER</span>
-        <div className="animate-[marquee_20s_linear_infinite] flex gap-10">
+      {/* 🚀 修复版跑马灯：使用内联样式彻底解决 Tailwind 编译遗漏问题 */}
+      <div className="bg-blue-600 text-white text-xs uppercase tracking-widest font-bold py-2 overflow-hidden flex items-center border-b border-blue-800 font-mono">
+        <span className="bg-blue-800 px-4 py-1 mr-4 z-10 flex items-center gap-2 shrink-0"><Zap size={14}/> LIVE TICKER</span>
+        <div className="flex gap-10 whitespace-nowrap min-w-max" style={{ animation: 'marquee 25s linear infinite' }}>
           {Object.entries(prices).map(([coin, price]) => <span key={coin}>{coin}/USDT : <span className="text-blue-200">${price}</span></span>)}
           {Object.entries(prices).map(([coin, price]) => <span key={coin + 'copy'}>{coin}/USDT : <span className="text-blue-200">${price}</span></span>)}
+          {Object.entries(prices).map(([coin, price]) => <span key={coin + 'copy2'}>{coin}/USDT : <span className="text-blue-200">${price}</span></span>)}
         </div>
       </div>
 
       <div className="p-4 md:p-8 max-w-[1400px] mx-auto">
-        <div className="border-b border-zinc-800 pb-4 mb-8 flex justify-between items-end font-mono">
+        <div className="border-b border-zinc-800 pb-4 mb-8 flex flex-col md:flex-row justify-between items-start md:items-end font-mono gap-4">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 bg-zinc-900 border border-zinc-700 flex items-center justify-center rounded-sm"><Activity className="text-blue-500" size={22} /></div>
             <div>
@@ -132,9 +158,17 @@ export default function TCSOTerminal() {
               <p className="text-xs text-zinc-500 uppercase tracking-widest mt-1">Autonomous Sentiment & Alpha Node</p>
             </div>
           </div>
-          <div className="text-right flex flex-col items-end gap-1.5">
-            <div className="text-xs text-zinc-500 uppercase flex items-center gap-2"><RefreshCw size={12} className={countdown < 5 ? "animate-spin text-blue-400" : ""}/> SYNC: {countdown}s</div>
-            <div className="text-blue-400 flex items-center gap-1.5 text-xs font-bold bg-blue-400/10 px-2 py-1 border border-blue-400/20 rounded-sm"><Cpu size={12}/> AI AGENT ONLINE</div>
+          <div className="flex items-end gap-6 w-full md:w-auto justify-between md:justify-end">
+            {/* 🚀 [变现钩子] 空投积分展示 */}
+            <div className="flex flex-col items-start md:items-end border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 rounded-sm">
+              <span className="text-[10px] text-amber-500/80 uppercase font-bold flex items-center gap-1"><Trophy size={10}/> S1 Airdrop Points</span>
+              <span className="text-base font-black text-amber-400 tabular-nums">{points} <span className="text-[10px]">PTS</span></span>
+            </div>
+            
+            <div className="text-right flex flex-col items-end gap-1.5">
+              <div className="text-xs text-zinc-500 uppercase flex items-center gap-2"><RefreshCw size={12} className={countdown < 5 ? "animate-spin text-blue-400" : ""}/> SYNC: {countdown}s</div>
+              <div className="text-blue-400 flex items-center gap-1.5 text-xs font-bold bg-blue-400/10 px-2 py-1 border border-blue-400/20 rounded-sm"><Cpu size={12}/> AI AGENT ONLINE</div>
+            </div>
           </div>
         </div>
 
@@ -182,6 +216,40 @@ export default function TCSOTerminal() {
                   "{latest.raw_text || "等待 DeAI 抓取最新情报..."}"
                 </blockquote>
 
+                {/* 🚀 [重新设计的投票/预测市场] */}
+                <div className="bg-[#0B0E14] border border-zinc-700 p-6 rounded-md mb-6 shadow-inner relative overflow-hidden">
+                  <div className="absolute top-0 right-0 bg-blue-600 text-white text-[9px] font-bold px-2 py-1 rounded-bl-md uppercase">Earn +50 PTS</div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Users size={16} className="text-purple-400"/>
+                    <h3 className="text-sm font-bold text-zinc-200">预测市场：此政策是否利好 BTC 战略储备库建设？</h3>
+                  </div>
+                  
+                  {voteStatus === 'unvoted' ? (
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <button onClick={() => handleVote('bull')} className="flex-1 flex items-center justify-center gap-2 bg-emerald-600/10 hover:bg-emerald-600/30 border border-emerald-500/50 text-emerald-400 py-3 rounded-md font-bold transition-all">
+                        <ThumbsUp size={18}/> 极度利好 (BULLISH)
+                      </button>
+                      <button onClick={() => handleVote('bear')} className="flex-1 flex items-center justify-center gap-2 bg-red-600/10 hover:bg-red-600/30 border border-red-500/50 text-red-400 py-3 rounded-md font-bold transition-all">
+                        <ThumbsDown size={18}/> 利空兑现 (BEARISH)
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4 animate-in fade-in duration-500">
+                      <div className="flex items-center justify-between text-sm font-bold">
+                        <span className="text-emerald-400">{fakeStats.bull}% 社区看涨</span>
+                        <span className="text-red-400">{fakeStats.bear}% 社区看空</span>
+                      </div>
+                      <div className="w-full h-4 bg-zinc-800 rounded-full overflow-hidden flex">
+                        <div className="bg-emerald-500 h-full transition-all duration-1000" style={{width: `${fakeStats.bull}%`}}></div>
+                        <div className="bg-red-500 h-full transition-all duration-1000" style={{width: `${fakeStats.bear}%`}}></div>
+                      </div>
+                      <p className="text-xs text-amber-500 text-center mt-2 font-mono flex items-center justify-center gap-1">
+                        <Trophy size={12}/> 投票成功！已为你空投 +50 积分。
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-zinc-900/40 p-5 border border-zinc-800/50 rounded-sm">
                   <div>
                     <div className="text-xs text-zinc-500 uppercase tracking-widest mb-2 font-mono font-bold">宏观传导 (Macro)</div>
@@ -199,7 +267,6 @@ export default function TCSOTerminal() {
 
             <FeedAd />
 
-            {/* 趋势图表 */}
             <div className="bg-[#0B0E14] border border-zinc-800 p-4 h-56">
                <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={[...data].reverse()}>
@@ -214,14 +281,13 @@ export default function TCSOTerminal() {
                </ResponsiveContainer>
             </div>
 
-            {/* 🚀 [线索收集模块 / Lead Gen] 资源的沉淀池 */}
             <article className="mt-4 bg-[#0B0E14] border border-blue-900/50 p-6 md:p-8 rounded-sm text-zinc-400 relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 rounded-full blur-3xl"></div>
               <h2 className="text-lg text-zinc-100 font-bold mb-3 tracking-wide flex items-center gap-2">
                 <Cpu className="text-blue-400"/> 开放 TCSO DeAI 接口 (V2 内测)
               </h2>
               <p className="text-sm leading-relaxed mb-6">
-                2026年是 AI Agent 全面接管量化交易的元年。我们即将开放 TCSO 的原生 API，支持直接接入你的交易机器人、清算监控脚本或自动质押合约。填入邮箱，获取限量 100 个的免流控 Beta API Key。
+                2026年是 AI Agent 全面接管量化交易的元年。我们即将开放 TCSO 的原生 API，支持直接接入你的交易机器人、清算监控脚本或自动质押合约。填入邮箱，获取限量 100 个的免流控 Beta API Key，<strong>并可按 1:1 比例兑换空投代币</strong>。
               </p>
               
               {!isSubscribed ? (
@@ -247,7 +313,6 @@ export default function TCSOTerminal() {
             
             <div className="sticky top-6 flex flex-col gap-6">
               
-              {/* 🚀 [爆仓流游戏化] 刺激赌徒心理的终极面板 */}
               <div className="bg-[#0B0E14] border border-zinc-800 p-5 rounded-sm shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-16 h-16 bg-red-600/10 rounded-full blur-2xl"></div>
                 <h3 className="text-[11px] text-zinc-300 mb-4 flex items-center justify-between font-bold uppercase tracking-widest border-b border-zinc-800 pb-3">
@@ -290,7 +355,12 @@ export default function TCSOTerminal() {
         </div>
       </div>
       <Analytics />
-      <style dangerouslySetInnerHTML={{__html: `@keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } } .custom-scrollbar::-webkit-scrollbar { width: 6px; } .custom-scrollbar::-webkit-scrollbar-track { background: #0B0E14; } .custom-scrollbar::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 6px; }`}} />
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-33.33%); } } 
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; } 
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0B0E14; } 
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 6px; }
+      `}} />
     </div>
   );
 }
